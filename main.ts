@@ -35,4 +35,4 @@ const nestedJson = {
 
 const flattenedJson = flattenJson(nestedJson);
 console.log("Original JSON:", nestedJson);
-console.log("Flattened JSON:", flattenedJson);
+console.log("Hello from new branch");
