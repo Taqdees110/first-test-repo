@@ -1,38 +1,77 @@
-console.log("Hello, World!");
-console.log("This is the main TypeScript file.");
+import { AppError, RequestContext } from '@repo/core'
+import { CustomLabEmployeeRepo } from '@repo/db'
+import { container } from 'src/container/container'
+import { AuthService } from 'src/services/auth-service'
+import { UpdateEmployeeInput, UpdateEmployeeOutput } from './types'
 
-function flattenJson(obj: Record<string, any>, prefix: string = ''): Record<string, any> {
-    const result: Record<string, any> = {};
+export async function updateEmployee(ctx: RequestContext, args: UpdateEmployeeInput): Promise<UpdateEmployeeOutput> {
+	const authService = container.get(AuthService)
+	await authService.isLabUser(ctx)
 
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const newKey = prefix ? `${prefix}.${key}` : key;
-            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                Object.assign(result, flattenJson(obj[key], newKey));
-            } else {
-                result[newKey] = obj[key];
-            }
-        }
-    }
-    return result;
+	const customLabEmployeeRepo = container.get(CustomLabEmployeeRepo)
+
+	const employee = await customLabEmployeeRepo.getEmployeeById(ctx, { employeeId: args.employeeId })
+	if (!employee) {
+		throw AppError.trpcNotFound('Employee not found')
+	}
+
+	const result = await customLabEmployeeRepo.updateEmployee(ctx, args)
+
+	// Fetch the updated employee with company details
+	const updatedEmployee = await customLabEmployeeRepo.getEmployeeById(ctx, { employeeId: args.employeeId })
+
+	ctx.log.info(`Employee ${args.employeeId} updated successfully`)
+
+	// Return the complete employee data instead of just the ID
+	return updatedEmployee || result
 }
+//========================================================================================================================================
+import { RequestContext } from '@repo/core'
+import { and, eq } from 'drizzle-orm'
+import { injectable } from 'inversify'
+import { employees } from '../../db/tables/custom-lab/company'
+import { companies } from '../../db/tables/custom-lab/company' // Import companies table
+// ...existing code...
 
-// Test case
-const nestedJson = {
-    name: "John Doe",
-    age: 30,
-    address: {
-        street: "123 Main St",
-        city: "Anytown",
-        zip: "12345"
-    },
-    contacts: {
-        email: "john.doe@example.com",
-        phone: "555-1234"
-    },
-    hobbies: ["reading", "hiking"]
-};
+@injectable()
+export class CustomLabEmployeeRepo {
+    // ...existing code...
 
-const flattenedJson = flattenJson(nestedJson);
-console.log("Original JSON:", nestedJson);
-console.log("Hello from new branch");
+    async getEmployeeById(ctx: RequestContext, args: FindEmployeeByEmployeeIdInput): Promise<FindEmployeeByEmployeeIdOutput | undefined> {
+        const result = await ctx.dbContext.db
+            .select({
+                id: employees.id,
+                companyId: employees.companyId,
+                customCompanyId: employees.customCompanyId,
+                firstName: employees.firstName,
+                lastName: employees.lastName,
+                employeeEmail: employees.employeeEmail,
+                employeePhone: employees.employeePhone,
+                accessLevel: employees.accessLevel,
+                isActive: employees.isActive,
+                createdAt: employees.createdAt,
+                updatedAt: employees.updatedAt,
+                // Include company details
+                customCompanyName: companies.companyName,
+            })
+            .from(employees)
+            .leftJoin(companies, eq(employees.customCompanyId, companies.id))
+            .where(and(eq(employees.id, args.employeeId), eq(employees.isDeleted, false)))
+            .limit(1)
+
+        return result[0]
+    }
+}
+//======================================================================================================================================
+
+// In your frontend component
+const updateMutation = trpc.employee.update.useMutation({
+  onSuccess: () => {
+    // Invalidate and refetch
+    trpcContext.employee.getById.invalidate()
+    trpcContext.employee.list.invalidate()
+    
+    // Or refetch specific query
+    refetchEmployee()
+  }
+})
