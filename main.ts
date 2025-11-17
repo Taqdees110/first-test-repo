@@ -75,3 +75,10 @@ const updateMutation = trpc.employee.update.useMutation({
     refetchEmployee()
   }
 })
+ui========
+	VITE_CLERK_PUBLISHABLE_KEY=
+	VITE_BACKEND_HOST=
+
+	be====
+	CLERK_PUBLISHABLE_KEY=
+	CLERK_SECRET_KEY=
