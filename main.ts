@@ -92,7 +92,7 @@ CLERK_SECRET_KEY=sk_test_kotoPeECcNC0Wv5GbSYWm6jxEjBDfiD4GnWZQg9MGJ
 ngrok http --url=neat-widely-robin.ngrok-free.app 4200
 
 
-
+https://neat-widely-robin.ngrok-free.app/api/v1/webhook/clerk-webhook
 
 
 	NRAK-SDMWEZICM5XH85U7JOO5FUOEVZ3
