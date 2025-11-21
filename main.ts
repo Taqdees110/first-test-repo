@@ -78,15 +78,18 @@ const updateMutation = trpc.employee.update.useMutation({
 ui========
 	VITE_CLERK_PUBLISHABLE_KEY=
 	VITE_BACKEND_HOST=
+	VITE_CLERK_PUBLISHABLE_KEY=pk_test_ZmFuY3ktc2FpbGZpc2gtNDQuY2xlcmsuYWNjb3VudHMuZGV2JA
+VITE_BACKEND_HOST=http://localhost:4200
 
 	be====
 	CLERK_PUBLISHABLE_KEY=
 	CLERK_SECRET_KEY=
 
+CLERK_PUBLISHABLE_KEY=pk_test_ZmFuY3ktc2FpbGZpc2gtNDQuY2xlcmsuYWNjb3VudHMuZGV2JA
+CLERK_SECRET_KEY=sk_test_kotoPeECcNC0Wv5GbSYWm6jxEjBDfiD4GnWZQg9MGJ
 
 
-
-
+ngrok http --url=neat-widely-robin.ngrok-free.app 4200
 
 
 
